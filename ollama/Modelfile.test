@@ -1,0 +1,4 @@
+FROM scratch
+TEMPLATE """{{ .Prompt }}"""
+PARAMETER num_predict 128
+SYSTEM """Venkatesh Bommeparthi LLM custom char-level transformer."""

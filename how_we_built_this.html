@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Venkatesh Bommeparthi — How We Built a 1M-Parameter LLM</title>
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --text:#e6edf3; --muted:#8b949e; --accent:#58a6ff; --accent2:#7ee787; --border:#30363d; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.6; }
+  .wrap { max-width:920px; margin:0 auto; padding:32px 20px 80px; }
+  header { border-bottom:1px solid var(--border); padding-bottom:20px; margin-bottom:28px; }
+  h1 { font-size:28px; margin:0 0 8px; color:var(--text); }
+  h1 .name { color:var(--accent); }
+  .sub { color:var(--muted); font-size:15px; }
+  h2 { font-size:21px; margin:36px 0 10px; color:var(--accent); border-left:3px solid var(--accent); padding-left:10px; }
+  h3 { font-size:17px; margin:24px 0 8px; color:var(--accent2); }
+  p { margin:8px 0; }
+  .badge { display:inline-block; background:var(--card); border:1px solid var(--border); border-radius:20px; padding:3px 12px; font-size:13px; color:var(--muted); margin-right:8px; }
+  .step { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin:16px 0; }
+  .step .num { display:inline-block; background:var(--accent); color:#0d1117; font-weight:700; border-radius:50%; width:28px; height:28px; line-height:28px; text-align:center; margin-right:10px; font-size:14px; }
+  .step h3 { margin:0; display:inline; }
+  ul { margin:8px 0; padding-left:22px; }
+  li { margin:5px 0; }
+  code, .cmd { background:#0d1117; border:1px solid var(--border); border-radius:6px; padding:2px 6px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; color:var(--accent2); }
+  pre { background:#0d1117; border:1px solid var(--border); border-radius:10px; padding:16px; overflow-x:auto; }
+  pre code { background:none; border:none; padding:0; color:var(--text); font-size:13px; line-height:1.5; }
+  .label { color:var(--muted); font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:.04em; }
+  .file { color:var(--accent); }
+  .note { border-left:3px solid var(--accent2); background:rgba(126,231,135,.08); padding:10px 14px; border-radius:0 8px 8px 0; margin:12px 0; font-size:14px; }
+  .bigpic { background:linear-gradient(135deg,#161b22,#1c2330); border:1px solid var(--border); border-radius:12px; padding:18px 22px; margin:18px 0; }
+  .bigpic .flow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; }
+  .chip { background:#0d1117; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; }
+  .arrow { color:var(--accent); font-size:18px; }
+  footer { margin-top:50px; border-top:1px solid var(--border); padding-top:18px; color:var(--muted); font-size:13px; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>How We Built <span class="name">Venkatesh Bommeparthi</span> — A 1M-Parameter LLM</h1>
+  <div class="sub">A complete, from-scratch, end-to-end walkthrough of every stage.</div>
+  <div style="margin-top:14px;">
+    <span class="badge">1,031,478 params</span>
+    <span class="badge">Owner: Venkatesh Bommeparthi</span>
+    <span class="badge">Trained on iCloud text</span>
+    <span class="badge">Runs on Mac (MPS)</span>
+    <span class="badge">No pretrained weights</span>
+  </div>
+</header>
+
+<div class="bigpic">
+  <div class="label">The Big Picture — 6-stage pipeline (+ 1 diagram step)</div>
+  <div class="flow">
+    <span class="chip">📁 iCloud text</span><span class="arrow">→</span>
+    <span class="chip">data_prep.py</span><span class="arrow">→</span>
+    <span class="chip">tokenizer.py</span><span class="arrow">→</span>
+    <span class="chip">model.py (1.03M)</span><span class="arrow">→</span>
+    <span class="chip">train.py</span><span class="arrow">→</span>
+    <span class="chip">plot_loss.py</span><span class="arrow">→</span>
+    <span class="chip">infer.py</span>
+  </div>
+  <p style="margin-top:10px;color:var(--muted);font-size:14px;">An extra step renders a one-page architecture diagram. Together these show how a raw text corpus becomes a generative model.</p>
+</div>
+
+<h2>Step-by-Step Walkthrough</h2>
+
+<div class="step">
+  <span class="num">1</span><h3>Data Preparation</h3>
+  <p><span class="label">Concept</span> — Gathering, cleaning, and splitting raw text.</p>
+  <p><span class="label">Why needed</span> — Models need structured text to learn vocabulary and character transitions.</p>
+  <p><span class="label">File</span> — <span class="file">data_prep.py</span></p>
+  <p><span class="label">Key detail</span> — Scans <code>~/Library/Mobile Documents/com~apple~CloudDocs/</code> for <code>.txt .md .markdown .json .csv .pdf</code> (skips files &gt;500 KB and backup folders). Compiles into <code>corpus.txt</code> capped at 1 MB (this run scanned 90 files → 1,058,152 bytes). Splits 90/10: train 948,455 chars / val 105,384 chars. Stats saved to <code>meta.json</code>.</p>
+  <p><span class="label">Run</span> — <code class="cmd">python3 data_prep.py</code></p>
+</div>
+
+<div class="step">
+  <span class="num">2</span><h3>Tokenization</h3>
+  <p><span class="label">Concept</span> — Mapping text symbols to integers.</p>
+  <p><span class="label">Why needed</span> — Neural networks operate on numeric tensors, not character strings.</p>
+  <p><span class="label">File</span> — <span class="file">tokenizer.py</span></p>
+  <p><span class="label">Key detail</span> — <code>CharacterTokenizer</code> indexes unique characters → vocabulary of <strong>182 tokens</strong>. Index 0 reserved for <code>&lt;unk&gt;</code>. Mapping saved to <code>vocab.json</code>. Char-level keeps the vocab tiny (182 vs 32,000+ for subwords), preventing the embedding layer from bloating — this is what keeps the model inside the 1M-param budget.</p>
+  <p><span class="label">Run</span> — fitted inside training: <code class="cmd">python3 train.py</code></p>
+</div>
+
+<div class="step">
+  <span class="num">3</span><h3>Model Design</h3>
+  <p><span class="label">Concept</span> — Defining network layers and forward-pass logic.</p>
+  <p><span class="label">Why needed</span> — The architecture decides how inputs flow through attention to predict the next token.</p>
+  <p><span class="label">File</span> — <span class="file">model.py</span> (config in <span class="file">config.py</span>)</p>
+  <p><span class="label">Key detail</span> — <code>TransformerLM</code>: a GPT-style decoder-only transformer. Config: <code>N_EMBD=128, BLOCK_SIZE=128, N_HEAD=4, N_LAYER=5, DROPOUT=0.1</code>. Embedding (<code>wte</code>) and LM head (<code>lm_head</code>) weights are tied to save memory.</p>
+  <p><span class="label">Param math (total 1,031,478)</span></p>
+  <ul>
+    <li>Token embeddings <code>wte</code>: 23,296</li>
+    <li>Position embeddings <code>wpe</code>: 16,384</li>
+    <li>5 decoder blocks (CausalSelfAttention + MLP + LayerNorm): 991,360</li>
+    <li>Final norm <code>ln_f</code>: 256</li>
+    <li>Tied <code>lm_head</code> bias: 182</li>
+  </ul>
+  <p><span class="label">Run</span> — <code class="cmd">python3 -c "import config, model; print(model.build(config).param_count)"</code></p>
+</div>
+
+<div class="step">
+  <span class="num">4</span><h3>Training</h3>
+  <p><span class="label">Concept</span> — Optimizing weights via backpropagation.</p>
+  <p><span class="label">Why needed</span> — Adjusts parameters to learn patterns and structure from the corpus.</p>
+  <p><span class="label">File</span> — <span class="file">train.py</span></p>
+  <p><span class="label">Key detail</span> — Runs on Apple Silicon <code>mps</code> (or <code>cpu</code>) for 1,000 steps. AdamW optimizer, LR 1e-3. Optimizes <strong>cross-entropy loss</strong> (surprise of predicted vs true next-token distribution). Every 100 steps, eval is appended to <code>loss_log.jsonl</code>; weights + optimizer state + metadata checkpointed to <code>checkpoints/checkpoint.pt</code> (resumable).</p>
+  <p><span class="label">Run</span> — <code class="cmd">python3 train.py</code></p>
+</div>
+
+<div class="step">
+  <span class="num">5</span><h3>Loss Visualization</h3>
+  <p><span class="label">Concept</span> — Plotting train vs validation loss curves.</p>
+  <p><span class="label">Why needed</span> — Diagnoses learning speed, convergence, and overfitting.</p>
+  <p><span class="label">File</span> — <span class="file">plot_loss.py</span></p>
+  <p><span class="label">Key detail</span> — Reads <code>loss_log.jsonl</code>, renders <code>loss_curve.svg</code> + <code>loss_curve.html</code>. The curve shows a classic lesson: train loss falls 2.5432 → 1.4924, but val loss hits a minimum of <strong>1.7543 at step 200</strong>, then rises to 2.9084 — the model starts <em>memorizing</em> the tiny training set.</p>
+  <p><span class="label">Run</span> — <code class="cmd">python3 plot_loss.py</code></p>
+</div>
+
+<div class="step">
+  <span class="num">6</span><h3>Inference</h3>
+  <p><span class="label">Concept</span> — Generating text from a seed prompt.</p>
+  <p><span class="label">Why needed</span> — Assesses generation by decoding probabilities.</p>
+  <p><span class="label">File</span> — <span class="file">infer.py</span></p>
+  <p><span class="label">Key detail</span> — Loads <code>checkpoint.pt</code> + <code>vocab.json</code>, supports greedy / temperature / top-k. Output is <strong>gibberish</strong>: it forms rough word shapes, but ~1.03M params + 1 MB data can't learn syntax or meaning. That is the point of the demo.</p>
+  <p><span class="label">Run</span> — <code class="cmd">python3 infer.py --prompt "Venkatesh Bommeparthi is " --max-tokens 200 --temperature 0.8</code></p>
+</div>
+
+<div class="step">
+  <span class="num">7</span><h3>Architecture Diagram</h3>
+  <p><span class="label">Concept</span> — Visualizing the pipeline and model internals.</p>
+  <p><span class="label">Why needed</span> — A blueprint of the codebase + data flow.</p>
+  <p><span class="label">File</span> — <span class="file">architecture_diagram.py</span></p>
+  <p><span class="label">Key detail</span> — Renders <code>architecture_diagram.svg</code> + <code>.html</code>: scripts → artifacts → checkpoint → model's internal tensor flow (Embedding → Decoder Blocks → LM Head).</p>
+  <p><span class="label">Run</span> — <code class="cmd">python3 architecture_diagram.py</code></p>
+</div>
+
+<h2>What We Learned &amp; Limitations</h2>
+<ul>
+  <li><strong>Scale:</strong> 1.03M params on ~1 MB text has tiny capacity — learns spelling/word clusters, not sentences. Real LLMs need billions of params + trillions of tokens.</li>
+  <li><strong>Overfitting:</strong> val loss rises after step 200 while train loss keeps falling. Real models avoid this with huge, diverse data.</li>
+  <li><strong>Tokenization:</strong> char-level is simple and param-efficient here, but yields long sequences. Production uses subword (BPE).</li>
+</ul>
+
+<h2>Full Run Commands</h2>
+<pre><code># 1. Create &amp; activate a virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# 2. Install dependencies (PyTorch)
+pip install -r requirements.txt
+
+# 3. Gather + split iCloud text
+python3 data_prep.py
+
+# 4. Train 1000 steps
+python3 train.py
+
+# 5. Render loss plots
+python3 plot_loss.py
+
+# 6. Generate text
+python3 infer.py --prompt "Venkatesh Bommeparthi is " --max-tokens 200 --temperature 0.8
+
+# 7. Generate architecture diagram
+python3 architecture_diagram.py</code></pre>
+
+<footer>
+  Project: <span class="file">/Users/venkataswaraswamy/Desktop/venkatesh_llm/</span> · Model owner: Venkatesh Bommeparthi · Built as an educational demo of the full LLM creation pipeline.
+</footer>
+
+</div>
+</body>
+</html>

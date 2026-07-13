@@ -1,0 +1,25 @@
+# Modelfile for Venkatesh Bommeparthi LLM
+# 
+# NOTE: True 'ollama run' with the native llama.cpp execution engine is not achievable 
+# because this model uses a custom character-level tokenizer (vocab size 182) and a custom 
+# GPT-2-style architecture that cannot be directly mapped to standard BPE-based GGUF 
+# architectures supported by Ollama/llama.cpp.
+# 
+# Therefore, this Modelfile creates a placeholder model in Ollama pointing to the tiny 
+# srinivasa-gpt2:latest model as a base. The actual Venkatesh Bommeparthi LLM is served 
+# via the python serve.py HTTP server.
+
+FROM srinivasa-gpt2:latest
+
+# Define the system prompt documenting how to run inference using serve.py
+SYSTEM """
+Venkatesh Bommeparthi Custom LLM (~1.03M parameters).
+This is a placeholder entry in Ollama. Because of the custom character-level tokenizer 
+and architecture, the actual inference is served by the python serve.py wrapper at 
+http://127.0.0.1:11743/api/generate.
+
+To generate text, run the following curl command:
+curl -X POST http://127.0.0.1:11743/api/generate -H "Content-Type: application/json" -d '{"prompt": "Venkatesh Bommeparthi is", "max_tokens": 100, "temperature": 0.8}'
+"""
+
+PARAMETER temperature 0.8

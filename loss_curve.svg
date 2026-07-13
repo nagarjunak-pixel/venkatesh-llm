@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <style>
+    rect.bg { fill: #0f172a; rx: 12px; }
+    text { font-family: "Inter", system-ui, -apple-system, sans-serif; }
+    .title { fill: #f8fafc; font-size: 20px; font-weight: 700; text-anchor: middle; }
+    .axis-label { fill: #94a3b8; font-size: 13px; font-weight: 500; }
+    .tick-text { fill: #64748b; font-size: 11px; }
+    .grid-line { stroke: #334155; stroke-width: 1; stroke-dasharray: 4,4; opacity: 0.6; }
+    .axis-line { stroke: #475569; stroke-width: 1.5; }
+    .line-train { stroke: #38bdf8; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .line-val { stroke: #fb923c; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .area-train { fill: url(#train-gradient); opacity: 0.15; }
+    .area-val { fill: url(#val-gradient); opacity: 0.1; }
+    .legend-text { fill: #e2e8f0; font-size: 12px; font-weight: 500; }
+    .tooltip-dot { stroke-width: 2; }
+    .tooltip-dot-train { fill: #0f172a; stroke: #38bdf8; }
+    .tooltip-dot-val { fill: #0f172a; stroke: #fb923c; }
+  </style>
+  <defs>
+    <linearGradient id="train-gradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="val-gradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fb923c" />
+      <stop offset="100%" stop-color="#fb923c" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  <rect class="bg" width="800" height="500" />
+  <text class="title" x="400" y="38">Venkatesh Bommeparthi — Training Loss</text>
+  <line class="grid-line" x1="70" y1="440.0" x2="760" y2="440.0" />
+  <text class="tick-text" x="60" y="444.0" text-anchor="end">1.296</text>
+  <line class="grid-line" x1="70" y1="347.5" x2="760" y2="347.5" />
+  <text class="tick-text" x="60" y="351.5" text-anchor="end">1.737</text>
+  <line class="grid-line" x1="70" y1="255.0" x2="760" y2="255.0" />
+  <text class="tick-text" x="60" y="259.0" text-anchor="end">2.179</text>
+  <line class="grid-line" x1="70" y1="162.5" x2="760" y2="162.5" />
+  <text class="tick-text" x="60" y="166.5" text-anchor="end">2.620</text>
+  <line class="grid-line" x1="70" y1="70.0" x2="760" y2="70.0" />
+  <text class="tick-text" x="60" y="74.0" text-anchor="end">3.061</text>
+  <line class="grid-line" x1="70.0" y1="70" x2="70.0" y2="440" />
+  <text class="tick-text" x="70.0" y="460" text-anchor="middle">0</text>
+  <line class="grid-line" x1="242.5" y1="70" x2="242.5" y2="440" />
+  <text class="tick-text" x="242.5" y="460" text-anchor="middle">249</text>
+  <line class="grid-line" x1="415.0" y1="70" x2="415.0" y2="440" />
+  <text class="tick-text" x="415.0" y="460" text-anchor="middle">499</text>
+  <line class="grid-line" x1="587.5" y1="70" x2="587.5" y2="440" />
+  <text class="tick-text" x="587.5" y="460" text-anchor="middle">749</text>
+  <line class="grid-line" x1="760.0" y1="70" x2="760.0" y2="440" />
+  <text class="tick-text" x="760.0" y="460" text-anchor="middle">999</text>
+  <line class="axis-line" x1="70" y1="70" x2="70" y2="440" />
+  <line class="axis-line" x1="70" y1="440" x2="760" y2="440" />
+  <text class="axis-label" x="400" y="485" text-anchor="middle">Training Step</text>
+  <text class="axis-label" x="20" y="250" text-anchor="middle" transform="rotate(-90 20 250)">Loss Value</text>
+  <polygon class="area-train" points="70.0,440.0 70.0,178.6 139.1,304.4 208.1,409.2 760.0,405.6 760.0,398.9 760.0,440.0" />
+  <polygon class="area-val" points="70.0,440.0 70.0,155.3 139.1,260.1 208.1,344.0 760.0,100.8 760.0,102.1 760.0,440.0" />
+  <polyline class="line-train" points="70.0,178.6 139.1,304.4 208.1,409.2 760.0,405.6 760.0,398.9" />
+  <polyline class="line-val" points="70.0,155.3 139.1,260.1 208.1,344.0 760.0,100.8 760.0,102.1" />
+  <circle class="tooltip-dot tooltip-dot-train" cx="760.0" cy="398.9" r="5" />
+  <circle class="tooltip-dot tooltip-dot-val" cx="760.0" cy="102.1" r="5" />
+  <line class="line-train" x1="570" y1="62" x2="600" y2="62" />
+  <circle class="tooltip-dot tooltip-dot-train" cx="585" cy="62" r="3" />
+  <text class="legend-text" x="610" y="66">Train Loss (1.4924)</text>
+  <line class="line-val" x1="570" y1="82" x2="600" y2="82" />
+  <circle class="tooltip-dot tooltip-dot-val" cx="585" cy="82" r="3" />
+  <text class="legend-text" x="610" y="86">Val Loss (2.9085)</text>
+</svg>
