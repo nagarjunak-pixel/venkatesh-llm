@@ -1,0 +1,24 @@
+# Private settings (keys, passwords) - never commit
+.env
+.env.*
+!.env.example
+!.env.template
+!.env.sample
+
+# Installed libraries and caches
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Local databases, logs and Mac files
+*.db
+*.sqlite
+*.sqlite3
+*.log
+.DS_Store
+
+# Keys and certificates
+*.pem
+*.key
